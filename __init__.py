@@ -2,7 +2,7 @@
 
 from .utils.session_manager import SessionManager
 from .utils.prompt_manager import PromptManager
-from .ai_handler import get_ai_handler, get_ai_response
+from .utils.ai_handler import get_ai_handler, get_ai_response
 
 __all__ = [
     'SessionManager',
