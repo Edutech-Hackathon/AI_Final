@@ -50,9 +50,9 @@ ai_math_tutor/
 │   ├── hint_buttons.py    # 힌트 버튼
 │   └── analytics.py       # 분석 대시보드
 │
-├── utils/                  # 유틸리티 함수
+├── utils/                 # 유틸리티 함수
 │   ├── __init__.py
-│   ├── image_processor.py # 이미지 처리
+│   ├── ai_handler.py      # ai 핸들러
 │   ├── prompt_manager.py  # 프롬프트 관리
 │   └── session_manager.py # 세션 상태 관리
 │
@@ -67,6 +67,7 @@ ai_math_tutor/
 │   └── logo.png          # 로고 이미지
 │
 └── data/                  # 데이터 저장
+    ├── (임시) test용 예시문제 
     ├── chat_history/      # 대화 기록
     └── analytics/         # 분석 데이터
 ```
