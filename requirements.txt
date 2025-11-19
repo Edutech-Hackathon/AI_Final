@@ -1,8 +1,18 @@
-# 가상 환경 라이브러리 버전
+# 설치 라이브러리
 
-streamlit==1.51.0
-openai==2.8.1
-python-dotenv==1.0.0
-pandas==2.3.3
-numpy==2.3.5
-plotly==6.5.0
+streamlit
+python-dotenv
+langchain-openai
+openai
+pandas
+numpy
+plotly
+matplotlib
+
+# File handling
+pillow
+PyYAML
+
+# Utilities
+python-dateutil
+pytz
