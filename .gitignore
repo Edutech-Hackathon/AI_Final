@@ -1,5 +1,6 @@
 # API키 관리
 .env
 
-# 캐시파일
+# 캐시&로그 파일
 __pycache__
+logs/
