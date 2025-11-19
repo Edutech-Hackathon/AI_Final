@@ -1,7 +1,4 @@
-"""
-채팅 인터페이스 컴포넌트
-학생과 AI 선생님 간의 대화를 관리하고 표시
-"""
+# 채팅 인터페이스 컴포넌트: 학생과 AI 선생님 간의 대화를 관리하고 표시
 
 import streamlit as st
 from datetime import datetime
