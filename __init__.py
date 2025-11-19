@@ -1,7 +1,4 @@
-"""
-유틸리티 패키지
-각종 헬퍼 함수와 클래스들을 제공
-"""
+# 유틸리티 패키지: 각종 헬퍼 함수와 클래스들을 제공
 
 from .utils.session_manager import SessionManager
 from .utils.prompt_manager import PromptManager
