@@ -1,15 +1,9 @@
-"""
-🎓 AI 수학 과외 선생님 - 메인 애플리케이션
-학생의 사고력을 키워주는 단계별 힌트 기반 AI 튜터
-"""
-
 import streamlit as st
 from dotenv import load_dotenv
 import os
 from datetime import datetime
 import json
 
-# 컴포넌트 임포트
 from components.sidebar import render_sidebar
 from components.chat_interface import ChatInterface
 from components.hint_buttons import render_hint_buttons
@@ -18,7 +12,6 @@ from utils.session_manager import SessionManager
 from utils.prompt_manager import PromptManager
 from config.settings import APP_CONFIG
 
-# 환경변수 로드
 load_dotenv()
 
 # 페이지 설정
@@ -130,7 +123,7 @@ def load_css():
     st.markdown(css, unsafe_allow_html=True)
 
 def init_session_state():
-    """세션 상태 초기화"""
+    """세션 상태 초기화 (수정됨)"""
     if 'session_manager' not in st.session_state:
         st.session_state.session_manager = SessionManager()
     
@@ -152,8 +145,8 @@ def init_session_state():
             'total_hints': 0,
             'hint_distribution': [0, 0, 0],
             'problem_types': {},
-            'study_time': 0,
             'last_study_date': None
+            # study_time 제거됨
         },
         'show_analytics': False,
         'uploaded_image': None,
@@ -359,7 +352,7 @@ def render_help_tab():
     
     ### 🚀 효과적인 학습을 위한 권장사항
     
-    - 하루 30분~1시간 꾸준히 학습하기
+    - 매일 꾸준히 문제 풀기
     - 틀린 문제는 다시 한번 도전하기
     - 학습 기록을 보며 취약점 파악하기
     - 선생님 피드백을 잘 읽고 이해하기
