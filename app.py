@@ -8,6 +8,7 @@ from components.sidebar import render_sidebar
 from components.chat_interface import ChatInterface
 from components.hint_buttons import render_hint_buttons
 from components.analytics import render_analytics
+from components.teacher_selection import render_teacher_selection
 from utils.session_manager import SessionManager
 from utils.prompt_manager import PromptManager
 from config.settings import APP_CONFIG
@@ -195,59 +196,59 @@ def main():
 
 def render_learning_tab():
     """학습 탭 렌더링"""
-    
-    # 현재 선택된 선생님 페르소나 표시
+
+    # 현재 선택된 선생님 페르소나 표시 (기존 코드 그대로 둬도 되고, 빼도 됨)
     persona_info = get_persona_info(st.session_state.selected_persona)
-    
+
     col1, col2 = st.columns([2, 1])
-    
+
     with col1:
         st.info(f"**{persona_info['name']} 선생님**과 함께 공부중 {persona_info['emoji']}")
-    
+
     with col2:
         if st.session_state.hint_level > 0:
             st.success(f"현재 힌트 단계: {st.session_state.hint_level}단계")
-    
-    # 구분선
+
     st.divider()
-    
-    # 문제 업로드 섹션
+
+    # 📷 문제 업로드 섹션
     st.subheader("📷 문제 업로드")
-    
     uploaded_file = st.file_uploader(
         "수학 문제 이미지를 업로드하세요",
         type=['png', 'jpg', 'jpeg'],
         help="문제 사진을 찍어서 업로드하거나 스크린샷을 업로드하세요"
     )
-    
+
     if uploaded_file:
         col1, col2 = st.columns([1, 1])
         with col1:
             st.image(uploaded_file, caption="업로드한 문제", use_column_width=True)
             st.session_state.uploaded_image = uploaded_file
-        
+
         with col2:
             st.info("💡 이미지가 업로드되었습니다. 아래에서 힌트 단계를 선택하거나 질문을 입력하세요!")
-    
-    # 힌트 버튼 섹션
+
+    # 👨‍🏫 선생님 선택 섹션 (새로 추가)
+    st.subheader("👨‍🏫 선생님 선택")
+    render_teacher_selection()
+
+    st.divider()
+
+    # 🎯 힌트 버튼 섹션
     st.subheader("🎯 힌트 선택")
-    
     render_hint_buttons()
-    
+
     # 구분선
     st.divider()
-    
-    # 채팅 인터페이스
+
+    # 💬 채팅 인터페이스 이하 기존 코드 그대로 ...
     st.subheader("💬 선생님과 대화")
-    
-    # 대화 기록 표시
     display_chat_history()
-    
-    # 사용자 입력
     user_input = st.chat_input("질문을 입력하거나 풀이를 시도해보세요...")
-    
+
     if user_input or st.session_state.hint_level > 0:
         handle_user_input(user_input)
+
 
 def display_chat_history():
     """대화 기록 표시"""

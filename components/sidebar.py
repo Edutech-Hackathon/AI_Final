@@ -1,7 +1,4 @@
-# Sidebar 컴포넌트: 선생님 페르소나 선택, 학습 진도, 설정 등을 관리
-
 import streamlit as st
-from datetime import datetime, timedelta
 
 def render_sidebar():
     """사이드바 렌더링"""
@@ -17,11 +14,6 @@ def render_sidebar():
         
         # 학생 정보
         render_student_info()
-        
-        st.divider()
-        
-        # 선생님 선택
-        render_teacher_selection()
         
         st.divider()
         
@@ -54,43 +46,12 @@ def render_student_info():
     # 학년 선택
     grade = st.selectbox(
         "학년",
-        options=["초등학생", "중학생", "고등학생"],  # GRADE_LEVELS 키랑 동일하게!
-        index=1,  # 기본값: 중학생
+        options=["초등학생", "중학생", "고등학생"],
+        index=1,
         key='grade_select',
         help="학년 수준을 선택하세요"
     )
     st.session_state.grade = grade
-
-def render_teacher_selection():
-    """선생님 페르소나 선택"""
-    st.subheader("👨‍🏫 선생님 선택")
-    
-    # 페르소나 옵션
-    personas = {
-        '친근한 선생님 😊': 'friendly',
-        '엄격한 선생님 🧐': 'strict',
-        '중립적 선생님 🤖': 'neutral'
-    }
-    
-    # 라디오 버튼으로 선택
-    selected = st.radio(
-        "선생님 스타일",
-        options=list(personas.keys()),
-        index=0,
-        key='persona_radio',
-        help="원하는 선생님 스타일을 선택하세요"
-    )
-    
-    st.session_state.selected_persona = personas[selected]
-    
-    # 선생님 설명
-    descriptions = {
-        'friendly': "따뜻하게 격려하며 자신감을 심어주는 선생님입니다. 실수해도 괜찮다고 다독여주고, 긍정적인 피드백을 많이 제공합니다.",
-        'strict': "체계적이고 정확한 학습을 추구하는 선생님입니다. 개념을 정확히 이해했는지 확인하고, 논리적 사고를 강조합니다.",
-        'neutral': "객관적이고 차분하게 가르치는 선생님입니다. 감정을 배제하고 사실과 논리에 기반한 설명을 제공합니다."
-    }
-    
-    st.info(descriptions[st.session_state.selected_persona])
 
 def render_progress():
     """학습 진도 표시 (문제 수 중심)"""
@@ -99,7 +60,6 @@ def render_progress():
     total = st.session_state.get('total_problems', 0)
     solved = st.session_state.get('solved_problems', 0)
     
-    # 단순화된 진도 표시
     if total > 0:
         progress = min(solved / total, 1.0)
         st.progress(progress)
@@ -108,7 +68,6 @@ def render_progress():
         st.progress(0)
         st.caption("오늘의 첫 문제를 풀어보세요!")
     
-    # 메트릭도 단순화
     st.metric(
         label="해결한 문제",
         value=f"{solved}개",
@@ -131,7 +90,6 @@ def render_quick_stats():
         )
     
     with col2:
-        # 가장 많이 사용한 힌트 레벨
         distribution = analytics.get('hint_distribution', [0, 0, 0])
         if sum(distribution) > 0:
             max_level = distribution.index(max(distribution)) + 1
@@ -146,7 +104,6 @@ def render_quick_stats():
                 value="없음"
             )
     
-    # 힌트 분포 차트
     if sum(distribution) > 0:
         st.caption("힌트 사용 분포")
         chart_data = {
@@ -160,7 +117,6 @@ def render_settings():
     """설정 옵션"""
     st.subheader("⚙️ 설정")
     
-    # 다크 모드 토글
     dark_mode = st.checkbox(
         "다크 모드",
         value=False,
@@ -168,7 +124,6 @@ def render_settings():
         help="화면을 어둡게 변경합니다"
     )
     
-    # 알림 설정
     notifications = st.checkbox(
         "학습 알림",
         value=True,
@@ -176,7 +131,6 @@ def render_settings():
         help="학습 목표 달성시 알림을 받습니다"
     )
     
-    # 자동 저장
     auto_save = st.checkbox(
         "대화 자동 저장",
         value=True,
@@ -190,7 +144,6 @@ def render_settings():
         'auto_save': auto_save
     }
     
-    # 데이터 초기화 버튼
     st.divider()
     
     if st.button("🗑️ 대화 기록 초기화", type="secondary", use_container_width=True):
