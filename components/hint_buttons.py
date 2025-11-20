@@ -119,19 +119,8 @@ def render_additional_options():
     with st.expander("🔧 추가 도구", expanded=False):
         col1, col2 = st.columns(2)
         
-        # ① 정답 입력하기
+        # ✏️ 풀이 확인
         with col1:
-            if st.button(
-                "✅ 정답 입력하기",
-                key="submit_answer",
-                use_container_width=True,
-                help="지금까지 생각한 최종 답을 입력합니다"
-            ):
-                st.session_state.request_type = "answer"
-                st.info("정답이라고 생각하는 값을 아래 대화창에 **숫자만** 입력해보세요!")
-
-        # ② 풀이 확인
-        with col2:
             if st.button(
                 "✏️ 풀이 확인",
                 key="check_solution",
@@ -141,10 +130,8 @@ def render_additional_options():
                 st.session_state.request_type = "check"
                 st.info("풀이를 아래 입력창에 적어주면 선생님이 확인해줄게!")
 
-        col3, col4 = st.columns(2)
-
-        # ③ 유사 문제
-        with col3:
+        # 📚 유사 문제
+        with col2:
             if st.button(
                 "📚 유사 문제",
                 key="similar_problem",

@@ -241,13 +241,35 @@ def render_learning_tab():
     # 구분선
     st.divider()
 
-    # 💬 채팅 인터페이스 이하 기존 코드 그대로 ...
     st.subheader("💬 선생님과 대화")
     display_chat_history()
-    user_input = st.chat_input("질문을 입력하거나 풀이를 시도해보세요...")
+
+    # 👉 정답 입력 모드 안내 + 버튼 (채팅 입력 바로 위)
+    answer_mode = st.session_state.get("request_type") == "answer"
+    col1, col2 = st.columns([4, 1])
+
+    with col1:
+        if answer_mode:
+            st.info("지금 입력하는 값은 **최종 정답**으로 제출돼요. 숫자만 입력해 보자! 😊")
+        else:
+            st.caption("정답이라고 확신이 들면 오른쪽 **정답 입력하기** 버튼을 눌러서 제출해 보세요.")
+
+    with col2:
+        if st.button("✅ 정답 입력하기", use_container_width=True):
+            st.session_state.request_type = "answer"
+            # 버튼 누른 뒤 바로 placeholder 바뀌도록
+            st.rerun()
+
+    # 👉 채팅 입력창 (모드에 따라 안내 문구 변경)
+    placeholder = "질문을 입력하거나 풀이를 시도해보세요..."
+    if st.session_state.get("request_type") == "answer":
+        placeholder = "정답이라고 생각하는 값을 **숫자만** 입력해보세요 (예: 60)"
+
+    user_input = st.chat_input(placeholder)
 
     if user_input or st.session_state.hint_level > 0:
         handle_user_input(user_input)
+
 
 
 def display_chat_history():
