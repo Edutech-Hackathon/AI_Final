@@ -54,10 +54,10 @@ def render_student_info():
     # 학년 선택
     grade = st.selectbox(
         "학년",
-        options=["초등학교", "중학교 1학년", "중학교 2학년", "중학교 3학년", 
-                "고등학교 1학년", "고등학교 2학년", "고등학교 3학년"],
-        index=3,  # 기본값: 중3
-        key='grade_select'
+        options=["초등학생", "중학생", "고등학생"],  # GRADE_LEVELS 키랑 동일하게!
+        index=1,  # 기본값: 중학생
+        key='grade_select',
+        help="학년 수준을 선택하세요"
     )
     st.session_state.grade = grade
 

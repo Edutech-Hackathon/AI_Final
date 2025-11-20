@@ -5,6 +5,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
+from config.settings import get_config
 
 def render_analytics():
     """학습 분석 대시보드 렌더링"""
@@ -181,31 +182,35 @@ def render_strengths_weaknesses():
 
     # 푼 문제가 적을 경우 안내 메시지 표시
     solved_count = st.session_state.get('solved_problems', 0)
-    
     if solved_count < 3:  # 문제가 3개 미만일 때
         st.info("📊 문제를 3개 이상 풀면 AI가 강점과 약점을 분석해드려요!")
-    
-    # 스킬 레벨 차트
-    categories = ['대수', '기하', '함수', '확률', '통계']
-    values = [20, 20, 20, 20, 20]  # 기본 값
-    
+
+    # 🔹 현재 학년에 맞는 토픽 불러오기
+    grades_config = get_config('grades')   # = GRADE_LEVELS
+    current_grade = st.session_state.get('grade', '중학생')
+    grade_info = grades_config.get(current_grade, {})
+
+    categories = grade_info.get('topics', ['대수', '기하', '함수', '확률', '통계'])
+    values = [20] * len(categories)  # 아직은 더미 데이터
+
     fig = go.Figure(data=go.Scatterpolar(
         r=values,
         theta=categories,
         fill='toself',
         marker=dict(color='#667eea')
     ))
-    
+
     fig.update_layout(
         polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
         showlegend=False,
         height=300,
         margin=dict(t=20, b=20)
     )
-    
+
     st.plotly_chart(fig, use_container_width=True)
 
-def render_progress_tracking():
+# 더미데이터
+def render_progress_tracking(): 
     """진도 추적"""
     st.markdown("### 📊 단원별 마스터 현황")
     
@@ -224,6 +229,7 @@ def render_progress_tracking():
         with col2:
             st.write(f"{unit}: {progress}%")
 
+# 더미데이터
 def render_study_recommendations():
     """학습 추천 (시간 -> 목표 기반 변경)"""
     st.subheader("🎯 맞춤형 학습 목표")

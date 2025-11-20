@@ -16,7 +16,7 @@ load_dotenv()
 
 # 페이지 설정
 st.set_page_config(
-    page_title="AI 수학 과외 선생님",
+    page_title="Hinteacher",
     page_icon="🎓",
     layout="wide",
     initial_sidebar_state="expanded"
