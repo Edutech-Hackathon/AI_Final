@@ -287,7 +287,7 @@ def render_learning_tab():
     # 👉 채팅 입력창 (모드에 따라 안내 문구 변경)
     placeholder = "질문을 입력하거나 풀이를 시도해보세요..."
     if st.session_state.get("request_type") == "answer":
-        placeholder = "정답이라고 생각하는 값을 **숫자만** 입력해보세요 (예: 60)"
+        placeholder = "정답번호 혹은 숫자를 입력해보세요 (예: 60)"
 
     user_input = st.chat_input(placeholder)
 
