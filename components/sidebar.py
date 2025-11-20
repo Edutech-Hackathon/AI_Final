@@ -1,4 +1,4 @@
-# 사이드바 컴포넌트: 학생 정보, 학습 진도, 설정 등을 관리
+# Sidebar 컴포넌트: 선생님 페르소나 선택, 학습 진도, 설정 등을 관리
 
 import streamlit as st
 from datetime import datetime, timedelta
@@ -7,7 +7,6 @@ def render_sidebar():
     """사이드바 렌더링"""
     
     with st.sidebar:
-        # 로고와 타이틀
         st.markdown("""
         <div style='text-align: center; padding: 1rem 0;'>
             <h2>🎓 AI 수학 과외</h2>
@@ -18,6 +17,11 @@ def render_sidebar():
         
         # 학생 정보
         render_student_info()
+        
+        st.divider()
+        
+        # 선생님 선택
+        render_teacher_selection()
         
         st.divider()
         
@@ -47,57 +51,69 @@ def render_student_info():
     )
     st.session_state.user_name = user_name
     
-    # 학년 선택 (3가지 옵션으로 단순화)
+    # 학년 선택
     grade = st.selectbox(
         "학년",
-        options=["초등학생", "중학생", "고등학생"],
-        index=1,  # 기본값: 중학생
-        key='grade_select',
-        help="학년을 선택하세요"
+        options=["초등학교", "중학교 1학년", "중학교 2학년", "중학교 3학년", 
+                "고등학교 1학년", "고등학교 2학년", "고등학교 3학년"],
+        index=3,  # 기본값: 중3
+        key='grade_select'
     )
     st.session_state.grade = grade
+
+def render_teacher_selection():
+    """선생님 페르소나 선택"""
+    st.subheader("👨‍🏫 선생님 선택")
     
-    # 학년별 학습 주제 표시
-    from utils.prompt_manager import GRADE_LEVELS
-    if grade in GRADE_LEVELS:
-        topics = GRADE_LEVELS[grade]['topics']
-        with st.expander("📚 주요 학습 주제", expanded=False):
-            for topic in topics:
-                st.markdown(f"• {topic}")
+    # 페르소나 옵션
+    personas = {
+        '친근한 선생님 😊': 'friendly',
+        '엄격한 선생님 🧐': 'strict',
+        '중립적 선생님 🤖': 'neutral'
+    }
+    
+    # 라디오 버튼으로 선택
+    selected = st.radio(
+        "선생님 스타일",
+        options=list(personas.keys()),
+        index=0,
+        key='persona_radio',
+        help="원하는 선생님 스타일을 선택하세요"
+    )
+    
+    st.session_state.selected_persona = personas[selected]
+    
+    # 선생님 설명
+    descriptions = {
+        'friendly': "따뜻하게 격려하며 자신감을 심어주는 선생님입니다. 실수해도 괜찮다고 다독여주고, 긍정적인 피드백을 많이 제공합니다.",
+        'strict': "체계적이고 정확한 학습을 추구하는 선생님입니다. 개념을 정확히 이해했는지 확인하고, 논리적 사고를 강조합니다.",
+        'neutral': "객관적이고 차분하게 가르치는 선생님입니다. 감정을 배제하고 사실과 논리에 기반한 설명을 제공합니다."
+    }
+    
+    st.info(descriptions[st.session_state.selected_persona])
 
 def render_progress():
-    """학습 진도 표시"""
-    st.subheader("📈 오늘의 학습")
+    """학습 진도 표시 (문제 수 중심)"""
+    st.subheader("📈 나의 성장")
     
-    # 진도율 계산
     total = st.session_state.get('total_problems', 0)
     solved = st.session_state.get('solved_problems', 0)
     
+    # 단순화된 진도 표시
     if total > 0:
-        progress = solved / total
+        progress = min(solved / total, 1.0)
         st.progress(progress)
-        st.caption(f"해결한 문제: {solved}/{total}")
+        st.caption(f"도전 과제: {solved}개 해결 / {total}개 시도")
     else:
         st.progress(0)
-        st.caption("아직 시작하지 않았어요")
+        st.caption("오늘의 첫 문제를 풀어보세요!")
     
-    # 오늘 푼 문제 수 표시
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric(
-            label="해결한 문제",
-            value=f"{solved}개",
-            delta="+1" if solved > 0 else None
-        )
-    with col2:
-        # 정답률 계산
-        solve_rate = 0
-        if total > 0:
-            solve_rate = round((solved / total) * 100)
-        st.metric(
-            label="정답률",
-            value=f"{solve_rate}%"
-        )
+    # 메트릭도 단순화
+    st.metric(
+        label="해결한 문제",
+        value=f"{solved}개",
+        delta="Keep going!" if solved > 0 else None
+    )
 
 def render_quick_stats():
     """빠른 통계 표시"""
@@ -177,32 +193,10 @@ def render_settings():
     # 데이터 초기화 버튼
     st.divider()
     
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("🔄 새 문제 시작", type="primary", use_container_width=True):
-            # 현재 문제 관련 상태만 초기화
-            st.session_state.hint_level = 0
-            st.session_state.problem_image = None
-            st.session_state.solution_image = None
-            st.session_state.request_type = None
-            st.session_state.chat_ended = False
-            st.success("새 문제를 시작할 수 있습니다!")
+    if st.button("🗑️ 대화 기록 초기화", type="secondary", use_container_width=True):
+        if st.button("정말 초기화하시겠습니까?", type="primary"):
+            st.session_state.chat_history = []
+            st.session_state.total_problems = 0
+            st.session_state.solved_problems = 0
+            st.success("대화 기록이 초기화되었습니다!")
             st.rerun()
-    
-    with col2:
-        if st.button("🗑️ 전체 초기화", type="secondary", use_container_width=True):
-            # 확인 다이얼로그
-            st.warning("⚠️ 모든 학습 기록이 삭제됩니다!")
-            if st.button("정말 초기화하시겠습니까?", key="confirm_reset"):
-                st.session_state.chat_history = []
-                st.session_state.total_problems = 0
-                st.session_state.solved_problems = 0
-                st.session_state.analytics_data = {
-                    'total_hints': 0,
-                    'hint_distribution': [0, 0, 0],
-                    'problem_types': {},
-                    'last_study_date': None,
-                    'events': []
-                }
-                st.success("전체 기록이 초기화되었습니다!")
-                st.rerun()

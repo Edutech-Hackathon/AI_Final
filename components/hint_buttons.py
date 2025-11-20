@@ -116,29 +116,48 @@ def display_hint_level_indicator():
 def render_additional_options():
     """추가 옵션 렌더링"""
     
-    with st.expander("🔧 추가 도구", expanded=True):
+    with st.expander("🔧 추가 도구", expanded=False):
         col1, col2 = st.columns(2)
         
         with col1:
-            if st.button("📝 개념 설명 요청", key="concept_explain", use_container_width=True):
+            if st.button(
+                "📝 개념 설명 요청",
+                key="concept_explain",
+                use_container_width=True,
+                help="문제와 관련된 수학 개념을 설명해드립니다"
+            ):
                 st.session_state.request_type = "concept"
-                st.info("궁금한 개념을 입력해주세요.")
+                st.info("개념 설명을 요청했습니다. 아래 대화창에 궁금한 개념을 입력하세요.")
         
         with col2:
-            # [변경됨] 정답 확인 버튼
-            if st.button("🏆 정답 제출/확인", key="check_answer_btn", use_container_width=True, type="primary"):
-                st.session_state.request_type = "check_answer"
-                st.warning("구하신 정답을 입력창에 적어주세요! (예: 1번 or 60)")
+            if st.button(
+                "🔄 다른 방법 제시",
+                key="alternative_method",
+                use_container_width=True,
+                help="다른 풀이 방법을 제시해드립니다"
+            ):
+                st.session_state.request_type = "alternative"
+                st.info("다른 풀이 방법을 요청했습니다.")
         
         col3, col4 = st.columns(2)
         
         with col3:
-             if st.button("✅ 풀이 확인 요청", key="check_solution", use_container_width=True):
-                st.session_state.request_type = "solution_check"
-                st.info("작성하신 풀이 사진을 올리거나 텍스트로 입력해주세요.")
-
+            if st.button(
+                "✅ 풀이 확인",
+                key="check_solution",
+                use_container_width=True,
+                help="작성한 풀이가 맞는지 확인해드립니다"
+            ):
+                st.session_state.request_type = "check"
+                st.info("풀이 확인을 요청했습니다. 아래에 풀이를 입력하세요.")
+        
         with col4:
-            if st.button("📚 유사 문제", key="similar_problem", use_container_width=True):
+            if st.button(
+                "📚 유사 문제",
+                key="similar_problem",
+                use_container_width=True,
+                help="비슷한 유형의 문제를 제공합니다"
+            ):
                 st.session_state.request_type = "similar"
                 st.info("유사 문제를 요청했습니다.")
 

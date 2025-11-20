@@ -21,7 +21,7 @@ class SessionManager:
         try:
             session_data = {
                 'user_name': st.session_state.get('user_name', '학생'),
-                'grade': st.session_state.get('grade', '중학생'),
+                'grade': st.session_state.get('grade', '중학교 3학년'),
                 'selected_persona': st.session_state.get('selected_persona', 'friendly'),
                 'chat_history': st.session_state.get('chat_history', []),
                 'analytics_data': st.session_state.get('analytics_data', {}),

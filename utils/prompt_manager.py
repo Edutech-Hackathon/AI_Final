@@ -4,22 +4,6 @@ import yaml
 import os
 from typing import Dict, Any
 
-# 학년별 난이도 및 토픽 정의
-GRADE_LEVELS = {
-    '초등학생': {
-        'difficulty': 'easy',
-        'topics': ['사칙연산', '분수', '소수', '도형', '측정', '기타 심화문제']
-    },
-    '중학생': {
-        'difficulty': 'medium',
-        'topics': ['정수와 유리수', '통계와 확률', '이차방정식', '제곱근과 실수', '인수분해', '삼각비']
-    },
-    '고등학생': {
-        'difficulty': 'very-hard',
-        'topics': ['공통수학', '지수와 로그', '수열', '미적분', '확률과 통계', '기하와 벡터']
-    }
-}
-
 class PromptManager:
     """프롬프트 관리 클래스"""
     
@@ -46,9 +30,9 @@ class PromptManager:
         - 줄글 중간에 나오는 수식(인라인)은 달러 기호 한 개($)로 감싸라. 
           (예: $y = ax + b$, $x^2$ 등)
         - 독립된 줄에 쓰는 복잡한 수식은 달러 기호 두 개($$)로 감싸라.
-          (예: $$ \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a} $$)
-        - 곱셈 기호는 x 대신 $\\times$ 또는 $\\cdot$을 사용해라.
-        - 텍스트로 '루트'라고 쓰지 말고 $\\sqrt{x}$ 처럼 표기해라.
+          (예: $$ \frac{-b \pm \sqrt{b^2 - 4ac}}{2a} $$)
+        - 곱셈 기호는 x 대신 $\times$ 또는 $\cdot$을 사용해라.
+        - 텍스트로 '루트'라고 쓰지 말고 $\sqrt{x}$ 처럼 표기해라.
         
         📘 힌트 단계별 가이드라인:
         - 1단계: 문제 접근법, 그림/조건에서 무엇을 먼저 보면 좋을지 가벼운 방향 제시
@@ -114,64 +98,11 @@ class PromptManager:
         이를 위해 두 함수를..."
         """
     
-    def get_answer_check_prompt(self):
-        """정답 확인용 프롬프트"""
-        return """
-        당신은 이제부터 "수학 채점관"입니다.
-        
-        1. 사용자가 입력한 답안이, 업로드된 문제의 정답과 일치하는지 계산하고 확인하세요.
-        2. 판단 결과에 따라 반드시 아래 **키워드**로 문장을 시작해야 합니다.
-        
-        ✅ 정답일 경우:
-        - 문장 시작: [[CORRECT]]
-        - 내용: 축하 메시지와 함께 "정답입니다!"라고 명확히 말해주세요.
-        - 간단한 풀이 과정도 함께 설명해주세요.
-        
-        ❌ 오답일 경우:
-        - 문장 시작: [[INCORRECT]]
-        - 내용: "아쉽게도 정답이 아닙니다."라고 말하고, 어느 부분에서 실수했는지 힌트를 주세요.
-        - 다시 한번 계산해보라고 격려해주세요.
-        """
-    
-    def get_solution_check_prompt_with_image(self):
-        """풀이 사진 확인용 프롬프트"""
-        return """
-        당신은 "수학 풀이 검토 선생님"입니다.
-        
-        학생이 작성한 풀이를 확인하고 다음을 판단하세요:
-        
-        1. 풀이 접근 방법이 올바른가?
-        2. 계산 과정에 오류가 없는가?
-        3. 최종 답이 정확한가?
-        
-        ✅ 풀이가 정확하고 답이 맞을 경우:
-        - 문장 시작: [[CORRECT]]
-        - 잘한 점을 구체적으로 칭찬
-        - "정답입니다!"라고 명확히 표현
-        
-        ❌ 풀이에 오류가 있거나 답이 틀렸을 경우:
-        - 문장 시작: [[INCORRECT]]
-        - 어느 단계에서 실수했는지 구체적으로 지적
-        - 올바른 방향으로 다시 풀 수 있도록 힌트 제공
-        - 격려하는 톤 유지
-        
-        수식은 반드시 LaTeX 형식($...$)으로 표기하세요.
-        """
-    
     def get_prompt(self, persona='friendly', hint_level=1, context=None):
         """완성된 프롬프트 반환"""
         
         # 기본 프롬프트
         prompt = self.base_prompt
-        
-        # 학년별 정보 추가
-        if context and 'grade' in context:
-            grade = context['grade']
-            if grade in GRADE_LEVELS:
-                grade_info = GRADE_LEVELS[grade]
-                prompt += f"\n\n[학생 정보]"
-                prompt += f"\n학년: {grade} ({grade_info['difficulty']} 난이도)"
-                prompt += f"\n주요 학습 주제: {', '.join(grade_info['topics'])}"
         
         # 페르소나 프롬프트 추가
         if persona in self.persona_prompts:
@@ -192,6 +123,9 @@ class PromptManager:
             
             if 'student_name' in context:
                 prompt += f"\n\n학생 이름: {context['student_name']}"
+            
+            if 'grade' in context:
+                prompt += f"\n학년: {context['grade']}"
         
         return prompt
     
@@ -206,12 +140,12 @@ class PromptManager:
         3. 간단한 예시
         4. 이 개념이 왜 중요한지
         
-        학생 수준에 맞춰 이해할 수 있도록 설명해주세요.
-        수식은 LaTeX 형식으로 표기하세요.
+        중학생이 이해할 수 있는 수준으로 설명해주세요.
+        수식보다는 말로 풀어서 설명하는 것을 우선시하세요.
         """
     
     def get_solution_check_prompt(self, solution):
-        """텍스트 풀이 확인 프롬프트"""
+        """풀이 확인 프롬프트"""
         return f"""
         학생의 풀이: {solution}
         
@@ -226,6 +160,19 @@ class PromptManager:
         - 다시 확인해봐야 할 부분 지적
         
         격려하면서도 정확한 피드백을 제공하세요.
+        """
+    
+    def get_alternative_method_prompt(self):
+        """다른 풀이 방법 프롬프트"""
+        return """
+        이 문제를 푸는 다른 방법을 제시해주세요.
+        
+        1. 현재 접근법과 어떻게 다른지 설명
+        2. 언제 이 방법이 유용한지
+        3. 첫 단계만 힌트로 제공
+        
+        여전히 정답은 알려주지 말고, 
+        다른 관점에서 문제를 바라보도록 도와주세요.
         """
     
     def save_custom_prompt(self, name, prompt_text):
