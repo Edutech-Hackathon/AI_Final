@@ -113,33 +113,33 @@ def display_hint_level_indicator():
     </div>
     """, unsafe_allow_html=True)
 
-# def render_additional_options():
-#     """추가 옵션 렌더링"""
+def render_additional_options():
+    """추가 옵션 렌더링"""
     
-#     with st.expander("🔧 추가 도구", expanded=False):
-#         col1, col2 = st.columns(2)
+    with st.expander("🔧 추가 도구", expanded=False):
+        col1, col2 = st.columns(2)
         
-#         # ✏️ 풀이 확인
-#         with col1:
-#             if st.button(
-#                 "✏️ 풀이 확인",
-#                 key="check_solution",
-#                 use_container_width=True,
-#                 help="작성한 풀이가 맞는지 확인해드립니다"
-#             ):
-#                 st.session_state.request_type = "check"
-#                 st.info("풀이를 아래 입력창에 적어주면 선생님이 확인해줄게!")
+        # ✏️ 풀이 확인
+        with col1:
+            if st.button(
+                "✏️ 풀이 확인",
+                key="check_solution",
+                use_container_width=True,
+                help="작성한 풀이가 맞는지 확인해드립니다"
+            ):
+                st.session_state.request_type = "check"
+                st.info("풀이를 아래 입력창에 적어주면 선생님이 확인해줄게!")
 
-#         # 📚 유사 문제
-#         with col2:
-#             if st.button(
-#                 "📚 유사 문제",
-#                 key="similar_problem",
-#                 use_container_width=True,
-#                 help="비슷한 유형의 문제를 제공합니다"
-#             ):
-#                 st.session_state.request_type = "similar"
-#                 st.info("유사 문제를 요청했습니다. 잠시만 기다려줘!")
+        # 📚 유사 문제
+        with col2:
+            if st.button(
+                "📚 유사 문제",
+                key="similar_problem",
+                use_container_width=True,
+                help="비슷한 유형의 문제를 제공합니다"
+            ):
+                st.session_state.request_type = "similar"
+                st.info("유사 문제를 요청했습니다. 잠시만 기다려줘!")
 
 def get_hint_emoji(level):
     """힌트 레벨에 따른 이모지 반환"""
