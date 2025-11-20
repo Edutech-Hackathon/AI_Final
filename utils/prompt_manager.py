@@ -3,6 +3,7 @@
 import yaml
 import os
 from typing import Dict, Any
+from config.settings import get_config
 
 class PromptManager:
     """프롬프트 관리 클래스"""
@@ -147,23 +148,69 @@ class PromptManager:
     # 새로 추가한거! (정답판정로직)
     def get_final_answer_prompt(self, persona: str, student_answer: str, context: Dict[str, Any] = None):
         """
-        학생이 최종 정답(숫자)을 입력했을 때, 
-        그 정답이 맞는지 판단하는 프롬프트를 생성.
+        학생이 최종 정답(숫자)을 입력했을 때,
+        - 정답 여부 판단
+        - 단원(topic) 분류까지 같이 수행하는 프롬프트
         """
+        # 🔹 현재 학년에 맞는 토픽 후보 가져오기
+        grades_config = get_config('grades')  # settings.GRADE_LEVELS
+        topics_list = []
+
+        if context:
+            ui_grade = context.get('grade', '')
+        else:
+            ui_grade = ''
+
+        # 사이드바에서 쓸 수 있는 값들(한글/영문 모두 대응)
+        # ex) '초등학생', '중학생', '고등학생' 또는 'elementary school student' 등
+        possible_grade = (ui_grade or '').lower()
+
+        # GRADE_LEVELS 키 목록에서 초/중/고 후보 찾기
+        elem_key = next((k for k in grades_config.keys()
+                         if 'elementary' in k.lower() or '초등학생' in k), None)
+        mid_key = next((k for k in grades_config.keys()
+                        if 'middle' in k.lower() or '중학생' in k), None)
+        high_key = next((k for k in grades_config.keys()
+                         if 'high' in k.lower() or '고등학생' in k), None)
+
+        if '초등학생' in possible_grade or 'elementary' in possible_grade:
+            grade_key = elem_key
+        elif '중학생' in possible_grade or 'middle' in possible_grade:
+            grade_key = mid_key
+        elif '고등학생' in possible_grade or 'high' in possible_grade:
+            grade_key = high_key
+        else:
+            # 혹시 UI 값이 GRADE_LEVELS 키와 동일하면 그대로 사용
+            grade_key = ui_grade if ui_grade in grades_config else mid_key
+
+        if grade_key and grade_key in grades_config:
+            topics_list = grades_config[grade_key].get('topics', [])
+
+        topics_str = ", ".join(topics_list) if topics_list else ""
+
         base = f"""
         너는 '학생의 사고력을 도와주는 AI 수학 과외 선생님'이야.
         지금 학생이 문제를 충분히 생각한 뒤 **최종 정답**으로 `{student_answer}` 를 입력했어.
 
-        너의 역할:
-        1. 업로드된 문제(이미지)와 지금까지의 대화를 바탕으로, 너 스스로 이 문제의 정답을 계산한다.
-        2. 학생이 입력한 값 `{student_answer}` 이 네가 구한 정답과 같은지 비교한다.
-        
+        1. 업로드된 문제(이미지)와 지금까지의 대화를 바탕으로, 너 스스로 이 문제의 정답을 계산해.
+        2. 학생이 입력한 값 `{student_answer}` 이 네가 구한 정답과 같은지 비교해.
+        3. 이 문제가 어떤 단원인지도 분류해.
+
         출력 규칙 (아주 중요):
+
+        [정답 판정]
         - 학생의 답이 완전히 맞으면, **첫 문장을 반드시 정확히 `정답입니다.` 로 시작**해.
-        - 학생의 답이 틀렸으면, **첫 문장을 반드시 `아쉽지만 아직 정답은 아닙니다.` 로 시작**해.
+        - 학생의 답이 틀렸으면, **첫 문장을 반드시 정확히 `아쉽지만 아직 정답은 아닙니다.` 로 시작**해.
         - 그 뒤에는 2~3문장 정도로 왜 그런지, 어떤 부분을 다시 생각하면 좋을지 힌트만 줘.
         - **정답 숫자 자체는 말하지 마.** (학생이 스스로 다시 생각해보도록 유도)
-        - 풀이는 요약해서 말하되, 전 과정을 다 써주지는 마.
+
+        [단원(topic) 분류]
+        - 이 문제는 아래 토픽 중 하나에 속한다고 가정하자:
+          {topics_str}
+        - 위 목록 중에서 **가장 알맞은 토픽 이름 1개만** 선택해.
+        - 그리고 답변 맨 마지막 줄에 아래 형식으로 정확히 한 줄만 추가해:
+          ##TOPIC:선택한토픽이름
+        - 이 줄은 시스템이 내부적으로만 사용할 거라, 학생에게 따로 설명할 필요는 없어.
         """
 
         # 페르소나 스타일 추가

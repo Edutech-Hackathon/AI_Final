@@ -37,7 +37,7 @@ def render_student_info():
     # 학생 이름 입력
     user_name = st.text_input(
         "이름",
-        value=st.session_state.get('user_name', '학생'),
+        value=st.session_state.get('user_name', '이름을 입력하세요'),
         key='user_name_input',
         help="선생님이 부를 이름을 입력하세요"
     )
@@ -45,9 +45,9 @@ def render_student_info():
     
     # 학년 선택
     grade = st.selectbox(
-        "학년",
+        "학년 수준",
         options=["초등학생", "중학생", "고등학생"],
-        index=1,
+        index=2,
         key='grade_select',
         help="학년 수준을 선택하세요"
     )

@@ -291,25 +291,22 @@ def handle_user_input(user_input):
     """사용자 입력 처리"""
     from utils.ai_handler import get_ai_response
     
-    # 타임스탬프 생성
     timestamp = datetime.now().strftime("%H:%M")
-
-    # 현재 요청 타입(일반 / 정답 제출 / 풀이 확인 등)
     request_type = st.session_state.get("request_type", None)
 
-    # 사용자 메시지 저장 (힌트만 눌렀을 때는 user_input이 없음)
+    # 1) 사용자 메시지 저장
     if user_input:
         st.session_state.chat_history.append(
             ("user", user_input, timestamp)
         )
 
-    # 모드 결정
+    # 2) 모드 결정
     mode = "hint"
     if request_type == "answer":
         mode = "answer"
 
-    # AI 응답 생성
-    response = get_ai_response(
+    # 3) AI 응답 생성
+    raw_response = get_ai_response(
         user_input=user_input,
         hint_level=st.session_state.hint_level,
         persona=st.session_state.selected_persona,
@@ -317,25 +314,28 @@ def handle_user_input(user_input):
         chat_history=st.session_state.chat_history,
         mode=mode
     )
-    
-    # AI 응답 저장
+
+    # 4) 응답에서 TOPIC 줄 추출 & 제거
+    response, topic = extract_topic_from_response(raw_response)
+
+    # 5) AI 응답 저장 (학생에게 보이는 텍스트는 cleaned response)
     st.session_state.chat_history.append(
         ("assistant", response, timestamp)
     )
 
-    # ⭐ 모드별 후처리
+    # 6) 모드별 후처리
     if mode == "hint":
-        # 힌트 통계만 업데이트
         update_analytics()
-        # 힌트 레벨 리셋
         st.session_state.hint_level = 0
 
     elif mode == "answer":
-        # 모델에게 "정답입니다." 로 시작하라고 시켰으므로,
-        # 그 문구로 정답 여부를 판정
         cleaned = (response or "").strip()
-        if cleaned.startswith("정답입니다"):
-            # 문제 해결 처리
+        is_correct = cleaned.startswith("정답입니다")
+
+        # 토픽 통계 업데이트 (정답/오답 모두 시도로 기록)
+        update_topic_stats(topic, is_correct)
+
+        if is_correct:
             st.session_state.solved_problems += 1
             st.session_state.total_problems += 1
             st.session_state.request_type = None
@@ -343,12 +343,9 @@ def handle_user_input(user_input):
             st.success("🎉 정답입니다! 문제를 잘 해결했어. 다음 문제로 넘어가 보자!")
         else:
             st.info("아쉽지만 아직 정답은 아니래. 선생님 설명을 참고해서 한 번 더 생각해보자!")
-            # 정답 모드는 유지할지/해제할지는 취향인데,
-            # 계속 입력하게 두고 싶으면 유지, 한 번만 검사하고 싶으면 None으로 리셋
-            # 여기서는 유지하지 않고 한 번만 검사하도록 함
+            # 한 번만 정답 모드로 판정하고 초기화
             st.session_state.request_type = None
 
-    # 페이지 리로드
     st.rerun()
 
 
@@ -359,6 +356,53 @@ def update_analytics():
         st.session_state.analytics_data['hint_distribution'][st.session_state.hint_level - 1] += 1
     
     st.session_state.analytics_data['last_study_date'] = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+def extract_topic_from_response(response_text: str):
+    """
+    LLM 응답에서 '##TOPIC:...' 줄을 찾아서
+    (깨끗해진_응답_텍스트, 토픽명 또는 None)을 반환
+    """
+    if not response_text:
+        return response_text, None
+
+    lines = response_text.splitlines()
+    topic = None
+    cleaned_lines = []
+
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("##TOPIC:"):
+            # ##TOPIC: 뒤에 오는 부분만 토픽명으로 사용
+            topic = stripped.split(":", 1)[1].strip()
+        else:
+            cleaned_lines.append(line)
+
+    cleaned_text = "\n".join(cleaned_lines).strip()
+    return cleaned_text, topic
+
+
+def update_topic_stats(topic: str, is_correct: bool):
+    """
+    토픽별 시도/정답 횟수 업데이트
+    analytics_data['topic_stats'][topic] = {'attempted': n, 'solved': m}
+    """
+    if not topic:
+        return
+
+    analytics = st.session_state.analytics_data
+
+    if 'topic_stats' not in analytics:
+        analytics['topic_stats'] = {}
+
+    stats = analytics['topic_stats'].get(topic, {'attempted': 0, 'solved': 0})
+
+    stats['attempted'] += 1
+    if is_correct:
+        stats['solved'] += 1
+
+    analytics['topic_stats'][topic] = stats
+    st.session_state.analytics_data = analytics
+
 
 def render_analytics_tab():
     """학습 분석 탭 렌더링"""

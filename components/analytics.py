@@ -1,10 +1,13 @@
 # 학습 분석 컴포넌트: 문제 해결 성과 및 정답률 중심 분석
 
+import os
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
+from openai import OpenAI
+from config.settings import get_config  # 🔹 GRADE_LEVELS 가져오기
 
 def render_analytics():
     """학습 분석 대시보드 렌더링"""
@@ -34,7 +37,7 @@ def render_analytics():
     
     st.divider()
     
-    # 상세 분석 (강점/약점만 남김)
+    # 상세 분석 + 최근 풀이 리뷰
     render_detailed_analysis()
 
 def render_metric_cards():
@@ -160,35 +163,183 @@ def render_weekly_progress_chart():
     st.success(f"🔥 이번 주 총 **{weekly_total}문제**를 해결했어요!")
 
 def render_detailed_analysis():
-    """상세 분석 섹션 (강점/약점 분석만)"""
+    """상세 분석 섹션 (강점/약점 분석 + 최근 풀이 리뷰)"""
     st.subheader("🔍 상세 학습 분석")
-    render_strengths_weaknesses()
+
+    # 안내 문구 (전체 폭)
+    solved_count = st.session_state.get('solved_problems', 0)
+    if solved_count < 3:
+        st.info("📚 문제를 3개 이상 풀면 AI가 강점과 약점을 분석해드려요!")
+
+    # 아래를 1:1 컬럼으로 나누기
+    col1, col2 = st.columns(2)
+
+    with col1:
+        render_strengths_weaknesses()
+
+    with col2:
+        render_solution_review()
 
 def render_strengths_weaknesses():
-    """강점과 약점 분석"""
+    """강점과 약점 분석 (레이더 차트)"""
 
-    # 푼 문제가 적을 경우 안내 메시지 표시
-    solved_count = st.session_state.get('solved_problems', 0)
-    
-    if solved_count < 3:  # 문제가 3개 미만일 때
-        st.info("📊 문제를 3개 이상 풀면 AI가 강점과 약점을 분석해드려요!")
-    
-    # 스킬 레벨 차트 (현재는 기본 값)
-    categories = ['대수', '기하', '함수', '확률', '통계']
-    values = [20, 20, 20, 20, 20]  # 기본 값
-    
+    # 🔹 1) 현재 학년에 맞는 토픽 목록 가져오기
+    grades_config = get_config('grades')  # settings.GRADE_LEVELS
+    ui_grade = st.session_state.get('grade', '고등학생')
+
+    possible_grade = (ui_grade or '').lower()
+
+    elem_key = next((k for k in grades_config.keys()
+                     if 'elementary' in k.lower() or '초등학생' in k), None)
+    mid_key = next((k for k in grades_config.keys()
+                    if 'middle' in k.lower() or '중학생' in k), None)
+    high_key = next((k for k in grades_config.keys()
+                     if 'high' in k.lower() or '고등학생' in k), None)
+
+    if '초등학생' in possible_grade or 'elementary' in possible_grade:
+        grade_key = elem_key
+    elif '중학생' in possible_grade or 'middle' in possible_grade:
+        grade_key = mid_key
+    elif '고등학생' in possible_grade or 'high' in possible_grade:
+        grade_key = high_key
+    else:
+        grade_key = ui_grade if ui_grade in grades_config else mid_key
+
+    if grade_key and grade_key in grades_config:
+        categories = grades_config[grade_key].get('topics', [])
+    else:
+        categories = ['지수와 로그', '수열', '미적분', '확률과 통계', '기하와 벡터']
+
+    # 🔹 2) topic_stats 기반으로 각 토픽별 점수 계산
+    topic_stats = st.session_state.analytics_data.get('topic_stats', {})
+
+    values = []
+    for topic in categories:
+        stat = topic_stats.get(topic, {'attempted': 0, 'solved': 0})
+        attempted = stat.get('attempted', 0)
+        solved = stat.get('solved', 0)
+
+        if attempted == 0:
+            score = 20  # 아직 안 풀어본 단원은 기본값
+        else:
+            acc = solved / attempted  # 정답률 0~1
+            score = 20 + acc * 80     # 20~100 범위로 스케일링
+
+        values.append(score)
+
     fig = go.Figure(data=go.Scatterpolar(
         r=values,
         theta=categories,
         fill='toself',
         marker=dict(color='#667eea')
     ))
-    
+
     fig.update_layout(
         polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
         showlegend=False,
         height=300,
         margin=dict(t=20, b=20)
     )
-    
+
     st.plotly_chart(fig, use_container_width=True)
+
+def render_solution_review():
+    """
+    최근에 맞힌 한 문제에 대해
+    - 풀이 흐름을 정리하고
+    - 잘한 점 / 개선하면 좋을 점을 피드백하는 섹션
+    """
+    st.markdown("#### 📝 최근 풀이 정리 & 피드백")
+    
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        st.info("⚠️ 풀이 리뷰 생성을 위해 OpenAI API 키가 필요합니다.")
+        return
+
+    chat_history = st.session_state.get("chat_history", [])
+    if not chat_history:
+        st.info("아직 대화 기록이 없어요. 먼저 문제를 풀어보면 풀이 리뷰를 보여줄게요 😊")
+        return
+
+    # 1️⃣ 가장 최근에 '정답입니다' 로 시작하는 assistant 메시지를 찾기
+    last_correct_idx = None
+    for i in range(len(chat_history) - 1, -1, -1):
+        role, content, ts = chat_history[i]
+        if role == "assistant" and isinstance(content, str) and content.strip().startswith("정답입니다"):
+            last_correct_idx = i
+            break
+
+    if last_correct_idx is None:
+        st.info("아직 정답으로 마무리된 문제가 없어요. 정답을 맞히면 풀이 리뷰가 생성됩니다! ✨")
+        return
+
+    # 2️⃣ 해당 문제 주변 대화들을 모아서 컨텍스트 생성
+    start_idx = max(0, last_correct_idx - 10)  # 최근 10개 정도 포함
+    relevant_history = chat_history[start_idx:last_correct_idx + 1]
+
+    convo_lines = []
+    for role, content, ts in relevant_history:
+        speaker = "학생" if role == "user" else "선생님"
+        convo_lines.append(f"{speaker}: {content}")
+    conversation_text = "\n".join(convo_lines)
+
+    # 3️⃣ 캐시 키 (같은 문제에 대해 반복 호출 방지)
+    cache_key = (len(chat_history), last_correct_idx)
+    if st.session_state.get("solution_review_cache_key") == cache_key:
+        cached = st.session_state.get("solution_review_text", "")
+        if cached:
+            st.markdown(cached)
+            return
+
+    client = OpenAI(api_key=api_key)
+
+    system_prompt = f"""
+    너는 학생의 사고 과정을 정리해주는 수학 과외 선생님이야.
+    아래는 한 문제를 풀면서 학생과 주고받은 실제 대화 기록이야.
+
+    [대화 기록]
+    {conversation_text}
+
+    이 기록을 바탕으로, 학생이 푼 "최근 문제 한 개"에 대해 다음 내용을 마크다운으로 정리해줘.
+
+    출력 형식(반드시 지켜줘):
+
+    ### 🧮 최근 푼 문제 풀이 흐름
+    - 1단계: ...
+    - 2단계: ...
+    - 3단계: ...
+    (필요하다면 4~5단계까지, 핵심 과정만 간단히 요약)
+
+    ### ✨ 잘한 점
+    - 학생이 스스로 잘 해낸 점 2~3가지
+
+    ### 🔍 더 연습하면 좋을 점
+    - 개념 이해나 풀이 습관 측면에서 보완하면 좋을 점 2~3가지
+
+    추가 규칙:
+    - 정답이 맞았다는 가정하에, 굳이 최종 '숫자 답'을 다시 적지 않아도 돼.
+    - 학생이 어떤 생각을 통해 정답에 도달했는지 "흐름"을 중심으로 정리해줘.
+    - 말투는 한국어, 부드럽고 응원하는 톤으로.
+    - 너무 긴 이론 강의 대신, 이 문제를 풀면서 드러난 특징 위주로 이야기해줘.
+    """
+
+    try:
+        resp = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": "위 형식에 맞춰서 풀이 흐름과 피드백을 정리해줘."}
+            ],
+            temperature=0.7,
+            max_tokens=500
+        )
+        review_text = resp.choices[0].message.content.strip()
+    except Exception as e:
+        st.warning(f"풀이 리뷰 생성 중 오류가 발생했어요: {e}")
+        return
+
+    # 캐시에 저장
+    st.session_state.solution_review_cache_key = cache_key
+    st.session_state.solution_review_text = review_text
+
+    st.markdown(review_text)
