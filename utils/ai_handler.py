@@ -15,6 +15,7 @@ def get_ai_response(user_input, hint_level, persona, uploaded_image=None, chat_h
     OpenAI API를 통해 답변 생성
     mode: "hint" (기본) / "answer" (최종 정답 판정)
     """
+    
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         return "⚠️ OpenAI API 키가 설정되지 않았습니다. .env 파일을 확인해주세요."
