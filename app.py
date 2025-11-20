@@ -277,12 +277,12 @@ def handle_user_input(user_input):
         st.session_state.chat_history.append(
             ("user", user_input, timestamp)
         )
-    
+    persona = st.session_state.get("selected_persona", "friendly")
     # AI 응답 생성
     response = get_ai_response(
         user_input=user_input,
         hint_level=st.session_state.hint_level,
-        persona=st.session_state.selected_persona,
+        persona=persona,
         uploaded_image=st.session_state.uploaded_image,
         chat_history=st.session_state.chat_history
     )

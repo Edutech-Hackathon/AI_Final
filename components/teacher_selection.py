@@ -15,19 +15,19 @@ def render_teacher_selection():
     # 페르소나 옵션
     personas = {
         'friendly': {
-            'title': "친근한 선생님 😊",
+            'title': "학원계의 힐링 전도사",
             'description': "따뜻하게 격려하며 자신감을 키워주는 스타일. 실수해도 괜찮다고 다독여주며 긍정적인 피드백을 많이 제공합니다.",
             'color': "#48bb78",
             'image': "https://cdn-icons-png.flaticon.com/512/2922/2922510.png"
         },
         'strict': {
-            'title': "엄격한 선생님 🧐",
+            'title': "대치동 호랭이 강사",
             'description': "체계적이고 정확한 학습을 강조하는 스타일. 개념 이해 여부를 꼼꼼하게 체크하며 논리적 사고를 중시합니다.",
             'color': "#f6ad55",
             'image': "https://cdn-icons-png.flaticon.com/512/2922/2922688.png"
         },
         'neutral': {
-            'title': "중립적 선생님 🤖",
+            'title': "인간AI",
             'description': "객관적이고 차분하게 설명하는 스타일. 감정 개입 없이 사실과 논리에 기반해 풀이 방향을 안내합니다.",
             'color': "#667eea",
             'image': "https://cdn-icons-png.flaticon.com/512/2922/2922656.png"
