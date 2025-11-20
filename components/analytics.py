@@ -205,7 +205,8 @@ def render_strengths_weaknesses():
     
     st.plotly_chart(fig, use_container_width=True)
 
-def render_progress_tracking():
+# 더미데이터
+def render_progress_tracking(): 
     """진도 추적"""
     st.markdown("### 📊 단원별 마스터 현황")
     
@@ -224,6 +225,7 @@ def render_progress_tracking():
         with col2:
             st.write(f"{unit}: {progress}%")
 
+# 더미데이터
 def render_study_recommendations():
     """학습 추천 (시간 -> 목표 기반 변경)"""
     st.subheader("🎯 맞춤형 학습 목표")
