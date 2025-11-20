@@ -7,7 +7,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 from openai import OpenAI
-from config.settings import get_config  # 🔹 GRADE_LEVELS 가져오기
+from config.settings import get_config  # GRADE_LEVELS 가져오기
 
 def render_analytics():
     """학습 분석 대시보드 렌더링"""

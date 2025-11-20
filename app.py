@@ -124,13 +124,10 @@ def load_css():
     st.markdown(css, unsafe_allow_html=True)
 
 def init_session_state():
-    """세션 상태 초기화 (수정됨)"""
     if 'session_manager' not in st.session_state:
         st.session_state.session_manager = SessionManager()
-    
     if 'chat_interface' not in st.session_state:
         st.session_state.chat_interface = ChatInterface()
-    
     if 'prompt_manager' not in st.session_state:
         st.session_state.prompt_manager = PromptManager()
     
@@ -146,17 +143,21 @@ def init_session_state():
             'total_hints': 0,
             'hint_distribution': [0, 0, 0],
             'problem_types': {},
-            'last_study_date': None
-            # study_time 제거됨
         },
         'show_analytics': False,
         'uploaded_image': None,
-        'user_name': '학생'
+        'user_name': '학생',
+
+        # 🔽🔽 여기 추가
+        'last_uploaded_filename': None,
+        'solution_review_cache_key': None,
+        'solution_review_text': "",
     }
     
     for key, value in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = value
+
 
 def main():
     """메인 애플리케이션 실행"""
@@ -220,11 +221,34 @@ def render_learning_tab():
     )
 
     if uploaded_file:
+        # ✅ 새 문제인지(파일 이름 기준) 확인
+        prev_name = st.session_state.get('last_uploaded_filename')
+        current_name = uploaded_file.name
+
+        if prev_name != current_name:
+            # 👉 새 문제라고 판단되면, 이 문제에 대한 대화/상태만 리셋
+            st.session_state.chat_history = []
+            st.session_state.hint_level = 0
+            st.session_state.request_type = None
+
+            # 최근 풀이 리뷰 캐시도 초기화
+            st.session_state.solution_review_cache_key = None
+            st.session_state.solution_review_text = ""
+
+            # 현재 문제 정보(원하면 Analytics에서 쓸 수도 있음)
+            st.session_state.current_problem = {
+                "filename": current_name,
+                "uploaded_at": datetime.now().isoformat()
+            }
+
+        # 마지막 업로드 파일 이름 갱신
+        st.session_state.last_uploaded_filename = current_name
+        st.session_state.uploaded_image = uploaded_file
+
+        # UI 표시
         col1, col2 = st.columns([1, 1])
         with col1:
-            st.image(uploaded_file, caption="업로드한 문제", use_column_width=True)
-            st.session_state.uploaded_image = uploaded_file
-
+            st.image(uploaded_file, caption="업로드한 문제", use_container_width=True)
         with col2:
             st.info("💡 이미지가 업로드되었습니다. 아래에서 힌트 단계를 선택하거나 질문을 입력하세요!")
 

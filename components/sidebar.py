@@ -4,11 +4,14 @@ def render_sidebar():
     """사이드바 렌더링"""
     
     with st.sidebar:
-        st.markdown("""
-        <div style='text-align: center; padding: 1rem 0;'>
-            <h2>🎓 AI 수학 과외</h2>
-        </div>
-        """, unsafe_allow_html=True)
+        # 🔹 상단 로고 영역
+        st.markdown(
+            "<div style='text-align: center; padding: 1rem 0;'>",
+            unsafe_allow_html=True
+        )
+        # assets/logo.png 사용
+        st.image("assets/logo.png", use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
         
         st.divider()
         
