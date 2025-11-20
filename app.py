@@ -328,12 +328,12 @@ def handle_user_input(user_input):
     mode = "hint"
     if request_type == "answer":
         mode = "answer"
-
+    persona = st.session_state.get("selected_persona", "friendly")
     # 3) AI 응답 생성
     raw_response = get_ai_response(
         user_input=user_input,
         hint_level=st.session_state.hint_level,
-        persona=st.session_state.selected_persona,
+        persona=persona,
         uploaded_image=st.session_state.uploaded_image,
         chat_history=st.session_state.chat_history,
         mode=mode
