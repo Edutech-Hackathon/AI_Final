@@ -117,13 +117,8 @@ def render_settings():
     """설정 옵션"""
     st.subheader("⚙️ 설정")
     
-    dark_mode = st.checkbox(
-        "다크 모드",
-        value=False,
-        key='dark_mode_toggle',
-        help="화면을 어둡게 변경합니다"
-    )
-    
+    # 다크 모드 제거했음
+
     notifications = st.checkbox(
         "학습 알림",
         value=True,
@@ -138,8 +133,8 @@ def render_settings():
         help="대화 내용을 자동으로 저장합니다"
     )
     
+    # settings에 dark_mode 키도 제거
     st.session_state.settings = {
-        'dark_mode': dark_mode,
         'notifications': notifications,
         'auto_save': auto_save
     }

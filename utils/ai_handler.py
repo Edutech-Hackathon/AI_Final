@@ -79,7 +79,7 @@ def get_ai_response(user_input, hint_level, persona, uploaded_image=None, chat_h
     # 5. API 호출
     try:
         response = client.chat.completions.create(
-            model="gpt-4o-mini", # 시연할때만 "gpt-4o" 버전으로 바꿔놓으면 될듯
+            model="gpt-4o-mini",
             messages=messages,
             temperature=0.7,
             max_tokens=1000
