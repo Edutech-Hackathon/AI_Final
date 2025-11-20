@@ -144,6 +144,48 @@ class PromptManager:
         수식보다는 말로 풀어서 설명하는 것을 우선시하세요.
         """
     
+    # 새로 추가한거! (정답판정로직)
+    def get_final_answer_prompt(self, persona: str, student_answer: str, context: Dict[str, Any] = None):
+        """
+        학생이 최종 정답(숫자)을 입력했을 때, 
+        그 정답이 맞는지 판단하는 프롬프트를 생성.
+        """
+        base = f"""
+        너는 '학생의 사고력을 도와주는 AI 수학 과외 선생님'이야.
+        지금 학생이 문제를 충분히 생각한 뒤 **최종 정답**으로 `{student_answer}` 를 입력했어.
+
+        너의 역할:
+        1. 업로드된 문제(이미지)와 지금까지의 대화를 바탕으로, 너 스스로 이 문제의 정답을 계산한다.
+        2. 학생이 입력한 값 `{student_answer}` 이 네가 구한 정답과 같은지 비교한다.
+        
+        출력 규칙 (아주 중요):
+        - 학생의 답이 완전히 맞으면, **첫 문장을 반드시 정확히 `정답입니다.` 로 시작**해.
+        - 학생의 답이 틀렸으면, **첫 문장을 반드시 `아쉽지만 아직 정답은 아닙니다.` 로 시작**해.
+        - 그 뒤에는 2~3문장 정도로 왜 그런지, 어떤 부분을 다시 생각하면 좋을지 힌트만 줘.
+        - **정답 숫자 자체는 말하지 마.** (학생이 스스로 다시 생각해보도록 유도)
+        - 풀이는 요약해서 말하되, 전 과정을 다 써주지는 마.
+        """
+
+        # 페르소나 스타일 추가
+        if persona in self.persona_prompts:
+            base += "\n\n" + self.persona_prompts[persona]
+
+        # 컨텍스트(대화, 학년, 이름) 추가
+        if context:
+            base += "\n\n[대화 컨텍스트]"
+            if 'chat_history' in context:
+                recent_messages = context['chat_history'][-5:]
+                for msg in recent_messages:
+                    role, content, _ = msg
+                    base += f"\n{role}: {content}"
+            if 'student_name' in context:
+                base += f"\n\n학생 이름: {context['student_name']}"
+            if 'grade' in context:
+                base += f"\n학년: {context['grade']}"
+
+        return base
+
+    
     def get_solution_check_prompt(self, solution):
         """풀이 확인 프롬프트"""
         return f"""

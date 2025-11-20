@@ -271,35 +271,64 @@ def handle_user_input(user_input):
     
     # 타임스탬프 생성
     timestamp = datetime.now().strftime("%H:%M")
-    
-    # 사용자 메시지 저장
+
+    # 현재 요청 타입(일반 / 정답 제출 / 풀이 확인 등)
+    request_type = st.session_state.get("request_type", None)
+
+    # 사용자 메시지 저장 (힌트만 눌렀을 때는 user_input이 없음)
     if user_input:
         st.session_state.chat_history.append(
             ("user", user_input, timestamp)
         )
-    
+
+    # 모드 결정
+    mode = "hint"
+    if request_type == "answer":
+        mode = "answer"
+
     # AI 응답 생성
     response = get_ai_response(
         user_input=user_input,
         hint_level=st.session_state.hint_level,
         persona=st.session_state.selected_persona,
         uploaded_image=st.session_state.uploaded_image,
-        chat_history=st.session_state.chat_history
+        chat_history=st.session_state.chat_history,
+        mode=mode
     )
     
     # AI 응답 저장
     st.session_state.chat_history.append(
         ("assistant", response, timestamp)
     )
-    
-    # 통계 업데이트
-    update_analytics()
-    
-    # 힌트 레벨 리셋
-    st.session_state.hint_level = 0
-    
+
+    # ⭐ 모드별 후처리
+    if mode == "hint":
+        # 힌트 통계만 업데이트
+        update_analytics()
+        # 힌트 레벨 리셋
+        st.session_state.hint_level = 0
+
+    elif mode == "answer":
+        # 모델에게 "정답입니다." 로 시작하라고 시켰으므로,
+        # 그 문구로 정답 여부를 판정
+        cleaned = (response or "").strip()
+        if cleaned.startswith("정답입니다"):
+            # 문제 해결 처리
+            st.session_state.solved_problems += 1
+            st.session_state.total_problems += 1
+            st.session_state.request_type = None
+            st.session_state.hint_level = 0
+            st.success("🎉 정답입니다! 문제를 잘 해결했어. 다음 문제로 넘어가 보자!")
+        else:
+            st.info("아쉽지만 아직 정답은 아니래. 선생님 설명을 참고해서 한 번 더 생각해보자!")
+            # 정답 모드는 유지할지/해제할지는 취향인데,
+            # 계속 입력하게 두고 싶으면 유지, 한 번만 검사하고 싶으면 None으로 리셋
+            # 여기서는 유지하지 않고 한 번만 검사하도록 함
+            st.session_state.request_type = None
+
     # 페이지 리로드
     st.rerun()
+
 
 def update_analytics():
     """학습 통계 업데이트"""

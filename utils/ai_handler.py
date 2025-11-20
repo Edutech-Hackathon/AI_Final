@@ -16,8 +16,10 @@ def encode_image_to_base64(image_file):
         print(f"이미지 변환 실패: {e}")
         return None
 
-def get_ai_response(user_input, hint_level, persona, uploaded_image=None, chat_history=None):
-    """OpenAI API를 통해 답변 생성"""
+def get_ai_response(user_input, hint_level, persona, uploaded_image=None, chat_history=None, mode: str = "hint"):
+    """OpenAI API를 통해 답변 생성
+    mode: "hint" (기본) / "answer" (최종 정답 판정)
+    """
     
     # 1. API 키 확인
     api_key = os.getenv("OPENAI_API_KEY")
@@ -27,54 +29,60 @@ def get_ai_response(user_input, hint_level, persona, uploaded_image=None, chat_h
     client = OpenAI(api_key=api_key)
     prompt_manager = PromptManager()
 
-    # 2. 시스템 프롬프트 구성 (페르소나 + 힌트 단계)
+    # 2. 컨텍스트 구성
     context = {
         'chat_history': chat_history if chat_history else [],
         'student_name': st.session_state.get('user_name', '학생'),
-        'grade': st.session_state.get('grade', '중학교 3학년')
+        'grade': st.session_state.get('grade', '중학생')
     }
-    
-    system_prompt = prompt_manager.get_prompt(
-        persona=persona, 
-        hint_level=hint_level, 
-        context=context
-    )
+
+    # 2-1. 시스템 프롬프트 선택
+    if mode == "answer":
+        # 최종 정답 판정용 프롬프트
+        system_prompt = prompt_manager.get_final_answer_prompt(
+            persona=persona,
+            student_answer=user_input or "",
+            context=context
+        )
+    else:
+        # 기존 힌트용 프롬프트
+        system_prompt = prompt_manager.get_prompt(
+            persona=persona,
+            hint_level=hint_level,
+            context=context
+        )
 
     # 3. 메시지 구성
     messages = [
         {"role": "system", "content": system_prompt}
     ]
 
-    # 이전 대화 기록 추가 (최근 4개만 - 토큰 절약)
+    # 이전 대화 기록 추가 (최근 4개만)
     if chat_history:
         recent_history = chat_history[-4:]
         for role, content, _ in recent_history:
-            # user와 assistant 역할만 추가 (timestamp 제외)
             messages.append({"role": role, "content": content})
 
     # 4. 현재 사용자 입력 구성 (텍스트 + 이미지)
     user_content = []
-    
+
     # 텍스트 추가
     if user_input:
         user_content.append({"type": "text", "text": user_input})
-    else:
-        # 입력 없이 힌트 버튼만 누른 경우
-        user_content.append({"type": "text", "text": f"현재 {hint_level}단계 힌트를 주세요."})
 
-    # 이미지 추가
-    if uploaded_image:
-        base64_image = encode_image_to_base64(uploaded_image)
-        if base64_image:
+    # 이미지 추가 (있다면)
+    if uploaded_image is not None:
+        img_base64 = encode_image_to_base64(uploaded_image)
+        if img_base64:
             user_content.append({
                 "type": "image_url",
                 "image_url": {
-                    "url": f"data:image/jpeg;base64,{base64_image}",
-                    "detail": "high" # 이미지 상세 분석 모드
+                    "url": f"data:image/png;base64,{img_base64}"
                 }
             })
 
-    messages.append({"role": "user", "content": user_content})
+    if user_content:
+        messages.append({"role": "user", "content": user_content})
 
     # 5. API 호출
     try:

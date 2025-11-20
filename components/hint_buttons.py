@@ -119,39 +119,32 @@ def render_additional_options():
     with st.expander("🔧 추가 도구", expanded=False):
         col1, col2 = st.columns(2)
         
+        # ① 정답 입력하기
         with col1:
             if st.button(
-                "📝 개념 설명 요청",
-                key="concept_explain",
+                "✅ 정답 입력하기",
+                key="submit_answer",
                 use_container_width=True,
-                help="문제와 관련된 수학 개념을 설명해드립니다"
+                help="지금까지 생각한 최종 답을 입력합니다"
             ):
-                st.session_state.request_type = "concept"
-                st.info("개념 설명을 요청했습니다. 아래 대화창에 궁금한 개념을 입력하세요.")
-        
+                st.session_state.request_type = "answer"
+                st.info("정답이라고 생각하는 값을 아래 대화창에 **숫자만** 입력해보세요!")
+
+        # ② 풀이 확인
         with col2:
             if st.button(
-                "🔄 다른 방법 제시",
-                key="alternative_method",
-                use_container_width=True,
-                help="다른 풀이 방법을 제시해드립니다"
-            ):
-                st.session_state.request_type = "alternative"
-                st.info("다른 풀이 방법을 요청했습니다.")
-        
-        col3, col4 = st.columns(2)
-        
-        with col3:
-            if st.button(
-                "✅ 풀이 확인",
+                "✏️ 풀이 확인",
                 key="check_solution",
                 use_container_width=True,
                 help="작성한 풀이가 맞는지 확인해드립니다"
             ):
                 st.session_state.request_type = "check"
-                st.info("풀이 확인을 요청했습니다. 아래에 풀이를 입력하세요.")
-        
-        with col4:
+                st.info("풀이를 아래 입력창에 적어주면 선생님이 확인해줄게!")
+
+        col3, col4 = st.columns(2)
+
+        # ③ 유사 문제
+        with col3:
             if st.button(
                 "📚 유사 문제",
                 key="similar_problem",
@@ -159,7 +152,7 @@ def render_additional_options():
                 help="비슷한 유형의 문제를 제공합니다"
             ):
                 st.session_state.request_type = "similar"
-                st.info("유사 문제를 요청했습니다.")
+                st.info("유사 문제를 요청했습니다. 잠시만 기다려줘!")
 
 def get_hint_emoji(level):
     """힌트 레벨에 따른 이모지 반환"""
