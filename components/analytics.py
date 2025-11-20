@@ -5,7 +5,6 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
-from config.settings import get_config
 
 def render_analytics():
     """학습 분석 대시보드 렌더링"""
@@ -35,13 +34,8 @@ def render_analytics():
     
     st.divider()
     
-    # 상세 분석
+    # 상세 분석 (강점/약점만 남김)
     render_detailed_analysis()
-    
-    st.divider()
-    
-    # 학습 추천
-    render_study_recommendations()
 
 def render_metric_cards():
     """주요 메트릭 카드 표시 (시간 -> 정답률 변경)"""
@@ -166,100 +160,35 @@ def render_weekly_progress_chart():
     st.success(f"🔥 이번 주 총 **{weekly_total}문제**를 해결했어요!")
 
 def render_detailed_analysis():
-    """상세 분석 섹션"""
+    """상세 분석 섹션 (강점/약점 분석만)"""
     st.subheader("🔍 상세 학습 분석")
-    
-    tab1, tab2 = st.tabs(["학습 강점", "단원별 진도"])
-    
-    with tab1:
-        render_strengths_weaknesses()
-    
-    with tab2:
-        render_progress_tracking()
+    render_strengths_weaknesses()
 
 def render_strengths_weaknesses():
     """강점과 약점 분석"""
 
     # 푼 문제가 적을 경우 안내 메시지 표시
     solved_count = st.session_state.get('solved_problems', 0)
+    
     if solved_count < 3:  # 문제가 3개 미만일 때
         st.info("📊 문제를 3개 이상 풀면 AI가 강점과 약점을 분석해드려요!")
-
-    # 🔹 현재 학년에 맞는 토픽 불러오기
-    grades_config = get_config('grades')   # = GRADE_LEVELS
-    current_grade = st.session_state.get('grade', '중학생')
-    grade_info = grades_config.get(current_grade, {})
-
-    categories = grade_info.get('topics', ['대수', '기하', '함수', '확률', '통계'])
-    values = [20] * len(categories)  # 아직은 더미 데이터
-
+    
+    # 스킬 레벨 차트 (현재는 기본 값)
+    categories = ['대수', '기하', '함수', '확률', '통계']
+    values = [20, 20, 20, 20, 20]  # 기본 값
+    
     fig = go.Figure(data=go.Scatterpolar(
         r=values,
         theta=categories,
         fill='toself',
         marker=dict(color='#667eea')
     ))
-
+    
     fig.update_layout(
         polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
         showlegend=False,
         height=300,
         margin=dict(t=20, b=20)
     )
-
+    
     st.plotly_chart(fig, use_container_width=True)
-
-# 더미데이터
-def render_progress_tracking(): 
-    """진도 추적"""
-    st.markdown("### 📊 단원별 마스터 현황")
-    
-    units = {
-        '제곱근과 실수': 100,
-        '인수분해': 85,
-        '이차방정식': 60,
-        '이차함수': 30,
-        '삼각비': 10
-    }
-    
-    for unit, progress in units.items():
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            st.progress(progress/100)
-        with col2:
-            st.write(f"{unit}: {progress}%")
-
-# 더미데이터
-def render_study_recommendations():
-    """학습 추천 (시간 -> 목표 기반 변경)"""
-    st.subheader("🎯 맞춤형 학습 목표")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("""
-        ### 📝 오늘의 추천 미션
-        
-        1. **이차방정식 도전**
-           - 🎯 목표: 근의 공식 문제 3개 풀기
-           - 💡 팁: 부호 실수 주의하기
-        
-        2. **오답 정복**
-           - 🎯 목표: 어제 틀린 문제 다시 풀어서 맞추기
-        
-        3. **개념 다지기**
-           - 🎯 목표: 이차함수 꼭짓점 구하는 법 복습
-        """)
-    
-    with col2:
-        st.markdown("""
-        ### 🏆 주간 달성 목표
-        
-        - [ ] 이번 주 문제 20개 해결
-        - [ ] 1단계 힌트만으로 5문제 풀기
-        - [x] 3일 연속 학습하기
-        
-        **진행률: 65%** 🔥
-        """)
-    
-    st.success("시간에 쫓기지 말고, 한 문제라도 정확하게 이해하는 것이 중요해요! 👍")
