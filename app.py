@@ -178,8 +178,8 @@ def main():
         # 헤더
         st.markdown("""
         <div class="main-header">
-            <h1>🎓 AI 수학 과외 선생님</h1>
-            <p>정답을 알려주지 않고 사고력을 키워주는 단계별 학습 시스템</p>
+            <h1>🎓 나만의 AI 과외쌤 "피움"</h1>
+            <p>정답을 알려주지 않고 사고력을 키워주는 단계별 학습도구 AI</p>
         </div>
         """, unsafe_allow_html=True)
         
@@ -482,17 +482,17 @@ def get_persona_info(persona_type):
     """선생님 페르소나 정보 반환"""
     personas = {
         'friendly': {
-            'name': '친근한',
+            'name': '학원계의 힐링 전도사',
             'emoji': '😊',
             'style': '따뜻하고 격려하는'
         },
         'strict': {
-            'name': '엄격한',
+            'name': '대치동 호랭이',
             'emoji': '🧐',
             'style': '정확하고 체계적인'
         },
         'neutral': {
-            'name': '중립적',
+            'name': '인간AI🤖',
             'emoji': '🤖',
             'style': '객관적이고 차분한'
         }

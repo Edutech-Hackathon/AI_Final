@@ -10,7 +10,7 @@ def render_sidebar():
             unsafe_allow_html=True
         )
         # assets/logo.png 사용
-        st.image("assets/logo.png", use_container_width=True)
+        st.image("assets/피움로고.png", use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
         
         st.divider()

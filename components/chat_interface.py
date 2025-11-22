@@ -76,9 +76,9 @@ class ChatInterface:
     def _get_persona_name(self):
         """현재 페르소나의 이름 반환"""
         personas = {
-            'friendly': '친근한',
-            'strict': '엄격한',
-            'neutral': '중립적'
+            'friendly': '힐링 전도사',
+            'strict': '대치동 호랭이',
+            'neutral': '인간AI'
         }
         return personas.get(st.session_state.get('selected_persona', 'friendly'), 'AI')
     
